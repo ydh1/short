@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.leederedu.educhat.db.mappers.CommendMapper">
+
+    <select id="getBanners" resultType="Map">
+        SELECT tb.id bannerId, tb.banner_type bannerType, tb.file_url, tb.duration, tb.hyperlink
+			FROM
+				t_sys_banner tb, t_info_plate tp
+		<where>
+			tb.is_valid = 1 AND tb.plate_id = tp.id AND tp.plate_code = #{param2}
+			<if test="param1 > 0">
+				and tb.region_code = (select IFNULL(tpi.region_code,'000000') region_code from t_acct_personal_info tpi where tpi.cust_id = #{param1})
+			</if>
+		</where>
+    </select>
+
+	
+
+</mapper>

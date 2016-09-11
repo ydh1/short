@@ -1,0 +1,40 @@
+<ehcache>
+    <diskStore path="java.io.tmpdir"/>
+    <defaultCache
+            maxElementsOnDisk="20000"
+            maxElementsInMemory="1000"
+            eternal="false"
+            timeToIdleSeconds="600"
+            timeToLiveSeconds="1200"
+            overflowToDisk="true"
+            diskPersistent="true"
+            memoryStoreEvictionPolicy="LRU"
+            />
+
+    <!--        maxBytesLocalHeap="50M" -->
+    <!--        maxBytesLocalDisk="5000M" -->
+
+    <!-- 通用的 ########################################-->
+
+    <!-- 长时存，需要通知刷新 -->
+    <cache name="long"
+           maxElementsOnDisk="2000000"
+           maxElementsInMemory="100000"
+           timeToIdleSeconds="172800"
+           timeToLiveSeconds="0"
+           eternal="false"
+           overflowToDisk="true"
+           diskPersistent="true"
+           memoryStoreEvictionPolicy="LRU"/>
+
+    <!-- 短时存，10分钟自动过期 -->
+    <cache name="short"
+           maxElementsOnDisk="2000000"
+           maxElementsInMemory="500000"
+           eternal="false"
+           timeToIdleSeconds="600"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+           diskPersistent="false"
+           memoryStoreEvictionPolicy="LRU"/>
+</ehcache>

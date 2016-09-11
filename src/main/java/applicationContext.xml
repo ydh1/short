@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                    http://www.springframework.org/schema/context
+                    http://www.springframework.org/schema/context/spring-context-4.1.xsd
+                    http://www.springframework.org/schema/mvc
+                    http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+                    http://www.springframework.org/schema/aop 
+                    http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+                    http://www.springframework.org/schema/tx
+                    http://www.springframework.org/schema/tx/spring-tx.xsd
+       				http://www.springframework.org/schema/util 
+       				http://www.springframework.org/schema/util/spring-util.xsd
+       				http://www.springframework.org/schema/cache  
+					http://www.springframework.org/schema/cache/spring-cache-3.2.xsd"
+	default-lazy-init="true" default-autowire="byName">
+
+	<!-- 开启自动扫描 为注解做准备 -->
+	<context:component-scan base-package="com.leederedu.educhat" />
+
+	<!-- annotation config -->
+	<aop:aspectj-autoproxy />
+	<!-- MVC -->
+	<mvc:annotation-driven>
+	    <mvc:message-converters register-defaults="true">
+	    	<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+					<property name="supportedMediaTypes">
+						<list>
+							<value>
+								text/html;charset=UTF-8
+							</value>
+						</list>
+					</property>
+					<constructor-arg value="UTF-8"/>
+			</bean>
+	        <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+	            <property name="objectMapper">
+	                <bean class="com.fasterxml.jackson.databind.ObjectMapper">
+	                    <property name="dateFormat">
+	                        <bean class="java.text.SimpleDateFormat">
+	                            <constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss"/>
+	                        </bean>
+	                    </property>
+	                </bean>
+	            </property>
+	        </bean>
+	    </mvc:message-converters>
+	</mvc:annotation-driven>
+	
+	<mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**" />
+            <bean class="com.leederedu.educhat.frame.intceptor.EnterIntceptor" />
+        </mvc:interceptor>
+	</mvc:interceptors>
+	
+	<mvc:resources location="/Resources/" mapping="/res/**" cache-period="31536000"/>
+
+	<!-- 定义视图分解器 -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="viewClass">
+			<value>org.springframework.web.servlet.view.InternalResourceView
+			</value>
+		</property>
+		<!-- 设置前缀，即视图所在的路径 -->
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<!-- 设置后缀，即视图的扩展名 -->
+		<property name="suffix" value=".jsp" />
+	</bean>
+	<!-- <bean name="/error" -->
+	<!-- class="org.springframework.web.servlet.mvc.ParameterizableViewController"> -->
+	<!-- <property name="viewName" value="error" /> -->
+	<!-- </bean> -->
+
+	<!--To enable @RequestMapping process on type level and method level -->
+<!-- 	<bean -->
+<!-- 		class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" /> -->
+<!-- 	<bean -->
+<!-- 		class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter" /> -->
+
+	<!-- 全局异常配置-->
+	<bean id="exceptionResolver" class="com.leederedu.educhat.frame.ExceptionHandler"/>
+	
+	<!-- 缓存配置 -->
+	<!-- 启用缓存注解功能(请将其配置在Spring主配置文件中) -->
+	<cache:annotation-driven cache-manager="cacheManager" />
+	
+	<!-- Spring自己的基于java.util.concurrent.ConcurrentHashMap实现的缓存管理器(该功能是从Spring3.1开始提供的) -->
+	<!-- <bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager"> 
+	    <property name="caches"> <set> <bean name="myCache" class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean"/> 
+	    </set> </property> </bean> -->
+	
+	<!-- 若只想使用Spring自身提供的缓存器,则注释掉下面的两个关于Ehcache配置的bean,并启用上面的SimpleCacheManager即可 -->
+	<!-- Spring提供的基于的Ehcache实现的缓存管理器 -->
+	<bean id="cacheManagerFactory"
+	    class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" p:shared="true">
+	    <property name="configLocation" value="classpath:ehcache.xml" />
+	</bean>
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+	    <property name="cacheManager" ref="cacheManagerFactory" />
+	</bean>
+	
+	<!-- proxool 连接池 -->
+	<bean id="dataSource" class="org.logicalcobwebs.proxool.ProxoolDataSource" lazy-init="false">
+		<property name="driver" value="com.mysql.jdbc.Driver" />
+		<!-- <property name="driverUrl" value="jdbc:mysql://114.215.210.231:3306/test?zeroDateTimeBehavior=convertToNull" /> -->
+		<property name="driverUrl" value="jdbc:mysql://192.168.0.103:3306/dwd?zeroDateTimeBehavior=convertToNull" />
+		<property name="user" value="root" />
+		<property name="password" value="root" />
+
+		<property name="maximumConnectionCount" value="50" />
+		<property name="minimumConnectionCount" value="2" />
+		<property name="houseKeepingSleepTime" value="60000" />
+		<property name="maximumActiveTime" value="900000" />
+		<property name="testBeforeUse" value="true" />
+<!-- 		<property name="testAfterUse" value="true" /> -->
+		<property name="houseKeepingTestSql" value="SELECT 1"></property>
+	</bean>
+
+	<!-- MyBatis Factory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:mybatis-config.xml"/>
+		<property name="mapperLocations" value="classpath:com/leederedu/educhat/db/mappers/*.xml" />
+		<property name="typeAliasesPackage" value="com.leederedu.educhat.model;net.com.leederedu.educhat.model.api" />
+		
+		<!-- http://git.oschina.net/free/Mybatis_PageHelper/   12345 -->
+		<property name="plugins">
+		  <array>
+            <!-- 执行时间分析，只在测试环境启用 -->
+            <bean class="com.leederedu.educhat.db.PerformanceInterceptor"></bean>
+            <!--分页插件-->
+		    <bean class="com.github.pagehelper.PageHelper">
+		      <property name="properties">
+		        <value>
+		          dialect=mysql
+		          reasonable=false
+		          pageSizeZero=true
+		        </value>
+		      </property>
+		    </bean>
+		  </array>
+		</property>
+	</bean>
+
+	<!-- <bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean"> 
+		<property name="mapperInterface" value="org.livingline.mybatis.mappers.UserMapper" 
+		/> <property name="sqlSessionFactory" ref="sqlSessionFactory" /> </bean> -->
+
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.leederedu.educhat.db.mappers" />
+	</bean>
+	
+	<bean id="multipartResolver"  
+        class="org.springframework.web.multipart.commons.CommonsMultipartResolver" p:defaultEncoding="utf-8"/>   
+	
+	<!-- 定义事务管理器（声明式的事务） -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="*" propagation="REQUIRED" />
+		</tx:attributes>
+	</tx:advice>
+	<!-- 将事务控制在Service层 -->
+	<aop:config>
+		<aop:pointcut expression="execution(public * com.highnew.service.*.*(..))" id="pc"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="pc" />
+	</aop:config>
+	
+	<bean class="com.leederedu.educhat.utils.SpringUtils" scope="singleton" lazy-init="false"></bean>
+</beans>
